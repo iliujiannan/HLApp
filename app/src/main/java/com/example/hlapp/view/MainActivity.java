@@ -1,4 +1,4 @@
-package com.example.hlapp;
+package com.example.hlapp.view;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
@@ -12,6 +12,8 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
+
+import com.example.hlapp.R;
 
 import java.io.File;
 
@@ -62,8 +64,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
             try {
                 // 创建保存录制视频的视频文件
-                videoFile = new File(Environment.getExternalStorageDirectory()
-                        .getCanonicalFile() + "/my_video.mp4");
+                String path = Environment.getExternalStorageDirectory().getPath()
+                        + "/Android/data/" + this.getPackageName() + "/my_video.mp4";
+                new File(path).mkdirs();
+                videoFile = new File(path);
                 // 创建MediaPlayer对象
                 mRecorder = new MediaRecorder();
                 mRecorder.reset();
