@@ -23,20 +23,12 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 
 public class MainActivity extends BaseActivity {
-
-
-    public static final String KEY_IMAGE_PATH = "imagePath";
     /**
      * 相机预览
      */
-    private FrameLayout mPreviewLayout;
+    private CameraPreview cameraPreview;
 
     private TextView mResultTv;
-
-    /**
-     * 相机类
-     */
-    private Camera mCamera;
 
     private boolean isTakePhoto = false;
 
@@ -69,7 +61,13 @@ public class MainActivity extends BaseActivity {
         Disposable disposable = Observable.interval(2, TimeUnit.SECONDS).observeOn(AndroidSchedulers.mainThread())
                 .subscribe(aLong -> {
                     if (!isTakePhoto) {
-                        takePhoto();
+                        isTakePhoto = true;
+                        cameraPreview.takePhoto(img -> {
+                            recognizer.recognize(img, result->{
+                                mResultTv.setText("识别结果：\n" + result.getString("result"));
+                                isTakePhoto = false;
+                            });
+                        });
                     }
                 }, error -> {
                 });
@@ -77,31 +75,9 @@ public class MainActivity extends BaseActivity {
 
     @Override
     protected void initComponent() {
-        mPreviewLayout = findViewById(R.id.preview_container);
+        FrameLayout layout = findViewById(R.id.preview_container);
+        cameraPreview = new CameraPreview(MainActivity.this);
+        layout.addView(cameraPreview);
         mResultTv = findViewById(R.id.result);
-        mCamera = Camera.open();
-        mCamera.getParameters().setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
-        mCamera.enableShutterSound(false);
-        mCamera.autoFocus(new Camera.AutoFocusCallback() {
-            @Override
-            public void onAutoFocus(boolean b, Camera camera) {
-
-            }
-        });
-        CameraPreview preview = new CameraPreview(MainActivity.this, mCamera);
-        mPreviewLayout.addView(preview);
-    }
-
-
-    private void takePhoto() {
-        isTakePhoto = true;
-        //调用相机拍照
-        mCamera.takePicture(null, null, null, (data, camera1) -> {
-            recognizer.recognize(data, jsonObject -> {
-                mResultTv.setText(jsonObject.getString("result"));
-                isTakePhoto = false;
-            });
-            mCamera.startPreview();
-        });
     }
 }

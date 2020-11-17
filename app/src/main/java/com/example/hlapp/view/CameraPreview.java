@@ -13,7 +13,9 @@ import java.io.IOException;
 import java.util.List;
 import java.util.SortedSet;
 
-public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback{
+import io.reactivex.functions.Consumer;
+
+public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback {
 
     private SurfaceHolder mHolder;
     private Camera mCamera;
@@ -36,11 +38,9 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
      */
     private AspectRatio mAspectRatio;
 
-
-    public CameraPreview(Context context, Camera mCamera) {
+    public CameraPreview(Context context) {
         super(context);
         this.context = context;
-        this.mCamera = mCamera;
         this.mHolder = getHolder();
         this.mHolder.addCallback(this);
         mHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
@@ -50,7 +50,17 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
+        initCamera(holder);
+    }
+
+    private void initCamera(SurfaceHolder holder) {
         try {
+            int index = findFrontCamera();
+            if (index == -1) {
+                index = findBackCamera();
+            }
+            mCamera = Camera.open(index);
+            mCamera.setDisplayOrientation(90);
             //设置设备高宽比
             mAspectRatio = getDeviceAspectRatio((AppCompatActivity) context);
             //设置预览方向
@@ -63,7 +73,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
             }
             //设置相机参数
             List<Camera.Size> allSizes = parameters.getSupportedPictureSizes();
-            Camera.Size size = allSizes.get(16); // get top size
+            Camera.Size size = allSizes.get(allSizes.size() - 1); // get top size
             for (int i = 0; i < allSizes.size(); i++) {
                 if (allSizes.get(i).width > size.width)
                     size = allSizes.get(i);
@@ -81,6 +91,36 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         } catch (IOException e) {
             Log.e("CameraPreview", "相机预览错误: " + e.getMessage());
         }
+    }
+
+    private int findFrontCamera() {
+        int cameraCount = 0;
+        Camera.CameraInfo cameraInfo = new Camera.CameraInfo();
+        cameraCount = Camera.getNumberOfCameras(); // get cameras number
+
+        for (int camIdx = 0; camIdx < cameraCount; camIdx++) {
+            Camera.getCameraInfo(camIdx, cameraInfo); // get camerainfo
+            if (cameraInfo.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
+                // 代表摄像头的方位，目前有定义值两个分别为CAMERA_FACING_FRONT前置和CAMERA_FACING_BACK后置
+                return camIdx;
+            }
+        }
+        return -1;
+    }
+
+    private int findBackCamera() {
+        int cameraCount = 0;
+        Camera.CameraInfo cameraInfo = new Camera.CameraInfo();
+        cameraCount = Camera.getNumberOfCameras(); // get cameras number
+
+        for (int camIdx = 0; camIdx < cameraCount; camIdx++) {
+            Camera.getCameraInfo(camIdx, cameraInfo); // get camerainfo
+            if (cameraInfo.facing == Camera.CameraInfo.CAMERA_FACING_BACK) {
+                // 代表摄像头的方位，目前有定义值两个分别为CAMERA_FACING_FRONT前置和CAMERA_FACING_BACK后置
+                return camIdx;
+            }
+        }
+        return -1;
     }
 
     @Override
@@ -142,5 +182,19 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     private boolean isLandscape(int orientationDegrees) {
         return (orientationDegrees == 90 ||
                 orientationDegrees == 270);
+    }
+
+    public void takePhoto(Consumer<byte[]> consumer) {
+
+        //调用相机拍照
+        mCamera.enableShutterSound(false);
+        mCamera.takePicture(null, null, null, (data, camera1) -> {
+            try {
+                consumer.accept(data);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            mCamera.startPreview();
+        });
     }
 }

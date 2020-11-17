@@ -6,11 +6,18 @@
     android:layout_height="match_parent"
     tools:context=".view.MainActivity">
 
-
     <FrameLayout
         android:id="@+id/preview_container"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"
+        tools:background="#000000" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:background="#ffffff"
+        app:layout_constraintBottom_toTopOf="@id/border"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
         android:id="@+id/tips"
@@ -19,7 +26,7 @@
         android:layout_marginTop="100dp"
         android:text="请将舌头放置在圆形框内"
         android:textColor="#000000"
-        android:textSize="16dp"
+        android:textSize="20dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -29,10 +36,17 @@
         android:layout_width="310dp"
         android:layout_height="310dp"
         android:layout_marginTop="30dp"
-        android:background="@drawable/hlapp_bg_camera_preview_border"
+        android:background="#00000000"
         app:layout_constraintEnd_toEndOf="@id/preview_container"
         app:layout_constraintStart_toStartOf="@id/preview_container"
         app:layout_constraintTop_toBottomOf="@id/tips" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:background="#ffffff"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/border" />
 
     <TextView
         android:id="@+id/result"
@@ -43,8 +57,9 @@
         android:layout_marginEnd="16dp"
         android:layout_marginBottom="20dp"
         android:textColor="#000000"
-        android:textSize="14dp"
+        android:textSize="16dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toBottomOf="@id/border"
         tools:text="识别结果：\n 舌头" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>
