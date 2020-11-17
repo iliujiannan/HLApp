@@ -1,122 +1,107 @@
 package com.example.hlapp.view;
 
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-
-import android.Manifest;
-import android.media.MediaRecorder;
+import android.content.Context;
+import android.hardware.Camera;
 import android.os.Bundle;
-import android.os.Environment;
-import android.util.Log;
-import android.view.SurfaceView;
-import android.view.View;
-import android.widget.Button;
+import android.widget.FrameLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.Nullable;
+
 import com.example.hlapp.R;
+import com.example.hlapp.base.BaseActivity;
+import com.example.hlapp.util.ImageRecognizer;
+import com.example.hlapp.util.PermissionUtils;
+import com.yanzhenjie.permission.AndPermission;
+import com.yanzhenjie.permission.Permission;
 
-import java.io.File;
+import java.util.concurrent.TimeUnit;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener {
-    private static final String TAG = "MainActivity";
-    // 程序中的两个按钮
-    Button record, stop;
-    // 系统的视频文件
-    File videoFile;
-    MediaRecorder mRecorder;
-    // 显示视频预览的SurfaceView
-    SurfaceView sView;
-    // 记录是否正在进行录制
-    private boolean isRecording = false;
+import io.reactivex.Observable;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.Disposable;
+
+public class MainActivity extends BaseActivity {
+
+
+    public static final String KEY_IMAGE_PATH = "imagePath";
+    /**
+     * 相机预览
+     */
+    private FrameLayout mPreviewLayout;
+
+    private TextView mResultTv;
+
+    /**
+     * 相机类
+     */
+    private Camera mCamera;
+
+    private boolean isTakePhoto = false;
+
+    private ImageRecognizer recognizer = new ImageRecognizer();
+
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        setContentView(R.layout.activity_main);
-        // 获取程序界面中的两个按钮
-        record = findViewById(R.id.record);
-        stop = findViewById(R.id.stop);
-        // 让stop按钮不可用
-        stop.setEnabled(false);
-        // 为两个按钮的单击事件绑定监听器
-        record.setOnClickListener(this);
-        stop.setOnClickListener(this);
-        // 获取程序界面中的SurfaceView
-        sView = (SurfaceView) this.findViewById(R.id.sView);
-        // 设置分辨率
-        sView.getHolder().setFixedSize(1920, 1080);   // 1080P
-        // 设置该组件让屏幕不会自动关闭
-        sView.getHolder().setKeepScreenOn(true);
+        PermissionUtils.applicationPermissions(this, new PermissionUtils.PermissionListener() {
+            @Override
+            public void onSuccess(Context context) {
+                initComponent();
+                startClock();
+            }
 
-        ActivityCompat.requestPermissions(MainActivity.this,
-                new String[]{android.Manifest.permission.CAMERA, android.Manifest.permission.RECORD_AUDIO, Manifest.permission.WRITE_EXTERNAL_STORAGE},0);
+            @Override
+            public void onFailed(Context context) {
+                if (AndPermission.hasAlwaysDeniedPermission(context, Permission.Group.CAMERA)
+                        && AndPermission.hasAlwaysDeniedPermission(context, Permission.Group.STORAGE)) {
+                    AndPermission.with(context).runtime().setting().start();
+                }
+                Toast.makeText(context, "申请权限失败", Toast.LENGTH_SHORT).show();
+            }
+        }, Permission.Group.STORAGE, Permission.Group.CAMERA);
+    }
+
+    private void startClock() {
+        Disposable disposable = Observable.interval(2, TimeUnit.SECONDS).observeOn(AndroidSchedulers.mainThread())
+                .subscribe(aLong -> {
+                    if (!isTakePhoto) {
+                        takePhoto();
+                    }
+                }, error -> {
+                });
     }
 
     @Override
-    public void onClick(View v) {
-        // 单击录制按钮
-        if (v.getId() == R.id.record) {
-            if (!Environment.getExternalStorageState().equals(
-                    android.os.Environment.MEDIA_MOUNTED)) {
-                Toast.makeText(MainActivity.this, "SD卡不存在，请插入SD卡！", Toast.LENGTH_SHORT).show();
-                return;
+    protected void initComponent() {
+        mPreviewLayout = findViewById(R.id.preview_container);
+        mResultTv = findViewById(R.id.result);
+        mCamera = Camera.open();
+        mCamera.getParameters().setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
+        mCamera.enableShutterSound(false);
+        mCamera.autoFocus(new Camera.AutoFocusCallback() {
+            @Override
+            public void onAutoFocus(boolean b, Camera camera) {
+
             }
-            try {
-                // 创建保存录制视频的视频文件
-                String path = Environment.getExternalStorageDirectory().getPath()
-                        + "/Android/data/" + this.getPackageName() + "/my_video.mp4";
-                new File(path).mkdirs();
-                videoFile = new File(path);
-                // 创建MediaPlayer对象
-                mRecorder = new MediaRecorder();
-                mRecorder.reset();
-                // 设置从麦克风采集声音
-                mRecorder.setAudioSource(MediaRecorder
-                        .AudioSource.MIC);
-                // 设置从摄像头采集图像
-                mRecorder.setVideoSource(MediaRecorder
-                        .VideoSource.CAMERA);
-                // 设置视频文件的输出格式
-                // 必须在设置声音编码格式、图像编码格式之前设置
-                mRecorder.setOutputFormat(MediaRecorder
-                        .OutputFormat.MPEG_4);
-                // 设置声音编码的格式
-                mRecorder.setAudioEncoder(MediaRecorder
-                        .AudioEncoder.DEFAULT);
-                // 设置图像编码的格式
-                mRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.MPEG_4_SP);
-//                mRecorder.setVideoSize(1920, 1080);  // 1080P
-                // 每秒16帧
-//                mRecorder.setVideoFrameRate(16);
-                mRecorder.setOutputFile(videoFile.getAbsolutePath());
-                // 指定使用SurfaceView来预览视频
-                mRecorder.setPreviewDisplay(sView.getHolder().getSurface());  // ①
-                mRecorder.prepare();
-                // 开始录制
-                mRecorder.start();
-                Log.d(TAG, "---recording---");
-                // 让record按钮不可用
-                record.setEnabled(false);
-                // 让stop按钮可用
-                stop.setEnabled(true);
-                isRecording = true;
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        } else if (v.getId() == R.id.stop) {   // 单击停止按钮
-            // 如果正在进行录制
-            if (isRecording) {
-                // 停止录制
-                mRecorder.stop();
-                // 释放资源
-                mRecorder.release();
-                mRecorder = null;
-                // 让record按钮可用
-                record.setEnabled(true);
-                // 让stop按钮不可用
-                stop.setEnabled(false);
-            }
-        }
+        });
+        CameraPreview preview = new CameraPreview(MainActivity.this, mCamera);
+        mPreviewLayout.addView(preview);
+    }
+
+
+    private void takePhoto() {
+        isTakePhoto = true;
+        //调用相机拍照
+        mCamera.takePicture(null, null, null, (data, camera1) -> {
+            recognizer.recognize(data, jsonObject -> {
+                mResultTv.setText(jsonObject.getString("result"));
+                isTakePhoto = false;
+            });
+            mCamera.startPreview();
+        });
     }
 }

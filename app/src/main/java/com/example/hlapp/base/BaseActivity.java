@@ -39,7 +39,8 @@ public abstract class BaseActivity extends AppCompatActivity {
         mProgressDialog = new ProgressDialog(this);
         mProgressDialog.setCancelable(false);
     }
-    protected void showMessage(String msg){
+
+    protected void showMessage(String msg) {
         Looper.prepare();
         Toast.makeText(getApplicationContext(), msg,
                 Toast.LENGTH_SHORT).show();
@@ -54,6 +55,7 @@ public abstract class BaseActivity extends AppCompatActivity {
             mProgressDialog.show();
         }
     }
+
     public void hideLoading() {
         if (mProgressDialog.isShowing()) {
             mProgressDialog.dismiss();

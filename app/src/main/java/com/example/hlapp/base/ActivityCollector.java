@@ -1,7 +1,8 @@
 package com.example.hlapp.base;
 
-import android.app.Activity;
 import android.app.Application;
+
+import androidx.appcompat.app.AppCompatActivity;
 
 import java.util.List;
 import java.util.Vector;
@@ -17,7 +18,7 @@ import java.util.Vector;
  */
 public class ActivityCollector extends Application {
     //运用list来保存们每一个activity是关键
-    private List<Activity> mList = new Vector<>();
+    private List<AppCompatActivity> mList = new Vector<>();
     //为了实现每次使用该类时不创建新的对象而创建的静态对象
     private static ActivityCollector instance;
 
@@ -36,14 +37,14 @@ public class ActivityCollector extends Application {
     }
 
     // add Activity
-    public void addActivity(Activity activity) {
+    public void addActivity(AppCompatActivity activity) {
         mList.add(activity);
     }
 
     //关闭每一个list内的activity
     public void exit() {
         try {
-            for (Activity activity : mList) {
+            for (AppCompatActivity activity : mList) {
                 if (activity != null)
                     activity.finish();
             }
