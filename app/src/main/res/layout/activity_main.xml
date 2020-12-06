@@ -14,9 +14,8 @@
 
     <View
         android:layout_width="match_parent"
-        android:layout_height="0dp"
+        android:layout_height="220dp"
         android:background="#ffffff"
-        app:layout_constraintBottom_toTopOf="@id/border"
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
@@ -31,35 +30,25 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <View
-        android:id="@+id/border"
-        android:layout_width="310dp"
-        android:layout_height="310dp"
-        android:layout_marginTop="30dp"
-        android:background="#00000000"
-        app:layout_constraintEnd_toEndOf="@id/preview_container"
-        app:layout_constraintStart_toStartOf="@id/preview_container"
-        app:layout_constraintTop_toBottomOf="@id/tips" />
 
     <View
+        android:id="@+id/bottom_block"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
+        android:layout_height="250dp"
         android:background="#ffffff"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/border" />
+        app:layout_constraintBottom_toBottomOf="parent" />
 
     <TextView
         android:id="@+id/result"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
+        android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
         android:layout_marginTop="20dp"
         android:layout_marginEnd="16dp"
         android:layout_marginBottom="20dp"
         android:textColor="#000000"
         android:textSize="16dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/border"
+        app:layout_constraintTop_toTopOf="@+id/bottom_block"
         tools:text="识别结果：\n 舌头" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

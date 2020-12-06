@@ -185,7 +185,6 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     }
 
     public void takePhoto(Consumer<byte[]> consumer) {
-
         //调用相机拍照
         mCamera.enableShutterSound(false);
         mCamera.takePicture(null, null, null, (data, camera1) -> {

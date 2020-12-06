@@ -1,7 +1,7 @@
 package com.example.hlapp.view;
 
 import android.content.Context;
-import android.hardware.Camera;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.widget.FrameLayout;
 import android.widget.TextView;
@@ -11,8 +11,11 @@ import androidx.annotation.Nullable;
 
 import com.example.hlapp.R;
 import com.example.hlapp.base.BaseActivity;
-import com.example.hlapp.util.ImageRecognizer;
+import com.example.hlapp.util.ImageUtil;
 import com.example.hlapp.util.PermissionUtils;
+import com.example.hlapp.util.ResUtilKt;
+import com.facebook.drawee.backends.pipeline.Fresco;
+import com.facebook.drawee.view.SimpleDraweeView;
 import com.yanzhenjie.permission.AndPermission;
 import com.yanzhenjie.permission.Permission;
 
@@ -20,6 +23,7 @@ import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 
 public class MainActivity extends BaseActivity {
@@ -30,15 +34,19 @@ public class MainActivity extends BaseActivity {
 
     private TextView mResultTv;
 
-    private boolean isTakePhoto = false;
+    private int times = 0;
 
-    private ImageRecognizer recognizer = new ImageRecognizer();
+    private CompositeDisposable compositeDisposable;
+
+    private boolean isRecognizing = false;
 
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
+        Fresco.initialize(this);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        compositeDisposable = new CompositeDisposable();
         PermissionUtils.applicationPermissions(this, new PermissionUtils.PermissionListener() {
             @Override
             public void onSuccess(Context context) {
@@ -58,19 +66,36 @@ public class MainActivity extends BaseActivity {
     }
 
     private void startClock() {
-        Disposable disposable = Observable.interval(2, TimeUnit.SECONDS).observeOn(AndroidSchedulers.mainThread())
+        compositeDisposable.add(Observable.interval(3, 5, TimeUnit.SECONDS).observeOn(AndroidSchedulers.mainThread())
                 .subscribe(aLong -> {
-                    if (!isTakePhoto) {
-                        isTakePhoto = true;
+                    if (!isRecognizing) {
+                        isRecognizing = true;
+                        times++;
                         cameraPreview.takePhoto(img -> {
-                            recognizer.recognize(img, result->{
-                                mResultTv.setText("识别结果：\n" + result.getString("result"));
-                                isTakePhoto = false;
-                            });
+                            Bitmap originBitmap = ImageUtil.byteArray2Bitmap(img);
+                            Bitmap bitmap = ImageUtil.cutImage(originBitmap, 0,
+                                    (int) ResUtilKt.dp2Px(this, 220),
+                                    originBitmap.getWidth(),
+                                    ResUtilKt.getScreenHeight(this) - (int) ResUtilKt.dp2Px(this, 220 + 220));
+                            byte[] image2 = ImageUtil.bitmap2ByteArray(bitmap);
+                            ImageUtil.recognize(image2,
+                                    result -> {
+                                        isRecognizing = false;
+                                        String strResult = result.optString("result", "识别错误");
+                                        mResultTv.setText(getResources().getString(
+                                                R.string.hlapp_result, times, strResult));
+                                        if (strResult.contains("舌")) {
+                                            String path = ImageUtil.saveImage(this, bitmap);
+                                            Bundle bundle = new Bundle();
+                                            bundle.putString("path", path);
+                                            SecondActivity.Companion.start(this, bundle);
+                                        }
+                                    });
                         });
                     }
                 }, error -> {
-                });
+                }));
+
     }
 
     @Override
@@ -79,5 +104,11 @@ public class MainActivity extends BaseActivity {
         cameraPreview = new CameraPreview(MainActivity.this);
         layout.addView(cameraPreview);
         mResultTv = findViewById(R.id.result);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        compositeDisposable.dispose();
     }
 }

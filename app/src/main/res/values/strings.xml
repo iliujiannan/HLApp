@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">HLApp</string>
+    <string name="hlapp_result">\n 第%1$d次识别结果为：%2$s</string>
+    <string name="hlapp_rec_result_tips">识别成功，图片本地path为：\n%s \n裁剪后图像为：</string>
 </resources>
