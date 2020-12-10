@@ -47,9 +47,6 @@ public abstract class BaseActivity extends AppCompatActivity {
         Looper.loop();
     }
 
-
-    protected abstract void initComponent();
-
     public void showLoading() {
         if (!mProgressDialog.isShowing()) {
             mProgressDialog.show();

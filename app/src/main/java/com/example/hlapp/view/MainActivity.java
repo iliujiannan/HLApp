@@ -68,37 +68,39 @@ public class MainActivity extends BaseActivity {
     private void startClock() {
         compositeDisposable.add(Observable.interval(3, 5, TimeUnit.SECONDS).observeOn(AndroidSchedulers.mainThread())
                 .subscribe(aLong -> {
-                    if (!isRecognizing) {
-                        isRecognizing = true;
-                        times++;
-                        cameraPreview.takePhoto(img -> {
-                            Bitmap originBitmap = ImageUtil.byteArray2Bitmap(img);
-                            Bitmap bitmap = ImageUtil.cutImage(originBitmap, 0,
-                                    (int) ResUtilKt.dp2Px(this, 220),
-                                    originBitmap.getWidth(),
-                                    ResUtilKt.getScreenHeight(this) - (int) ResUtilKt.dp2Px(this, 220 + 220));
-                            byte[] image2 = ImageUtil.bitmap2ByteArray(bitmap);
-                            ImageUtil.recognize(image2,
-                                    result -> {
-                                        isRecognizing = false;
-                                        String strResult = result.optString("result", "识别错误");
-                                        mResultTv.setText(getResources().getString(
-                                                R.string.hlapp_result, times, strResult));
-                                        if (strResult.contains("舌")) {
-                                            String path = ImageUtil.saveImage(this, bitmap);
-                                            Bundle bundle = new Bundle();
-                                            bundle.putString("path", path);
-                                            SecondActivity.Companion.start(this, bundle);
-                                        }
-                                    });
-                        });
-                    }
-                }, error -> {
-                }));
+                    SecondActivity.Companion.start(this, new Bundle());
+                    finish();
+//                    if (!isRecognizing) {
+//                        isRecognizing = true;
+//                        times++;
+//                        cameraPreview.takePhoto(img -> {
+//                            Bitmap originBitmap = ImageUtil.byteArray2Bitmap(img);
+//                            Bitmap bitmap = ImageUtil.cutImage(originBitmap, 0,
+//                                    (int) ResUtilKt.dp2Px(this, 220),
+//                                    originBitmap.getWidth(),
+//                                    ResUtilKt.getScreenHeight(this) - (int) ResUtilKt.dp2Px(this, 220 + 220));
+//                            byte[] image2 = ImageUtil.bitmap2ByteArray(bitmap);
+//                            ImageUtil.recognize(image2,
+//                                    result -> {
+//                                        isRecognizing = false;
+//                                        String strResult = result.optString("result", "识别错误");
+//                                        mResultTv.setText(getResources().getString(
+//                                                R.string.hlapp_result, times, strResult));
+//                                        if (strResult.contains("舌")) {
+//                                            String path = ImageUtil.saveImage(this, bitmap);
+//                                            Bundle bundle = new Bundle();
+//                                            bundle.putString("path", path);
+//                                            SecondActivity.Companion.start(this, bundle);
+//                                            finish();
+//                                        }
+//                                    });
+//                        });
+                    }));
+//                }, error -> {
+//                }));
 
     }
 
-    @Override
     protected void initComponent() {
         FrameLayout layout = findViewById(R.id.preview_container);
         cameraPreview = new CameraPreview(MainActivity.this);

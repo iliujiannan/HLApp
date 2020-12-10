@@ -9,3 +9,5 @@ fun getScreenWidth(context: Context) = context.resources.displayMetrics.widthPix
 fun getScreenHeight(context: Context) = context.resources.displayMetrics.heightPixels
 
 fun getCacheRootPath(context: Context) = context.externalCacheDir?.path
+
+lateinit var context: Context

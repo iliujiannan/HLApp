@@ -65,4 +65,6 @@ dependencies {
     api 'com.github.bumptech.glide:glide:3.7.0'
     //权限申请
     api 'com.yanzhenjie:permission:2.0.0-rc11'
+    apply plugin: 'kotlin-android'
+    apply plugin: 'kotlin-android-extensions'
 }

@@ -6,7 +6,9 @@ import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.converter.scalars.ScalarsConverterFactory
 
 object ServiceCreator {
-    private const val BASE_URL = "https://www.aihl.com/"
+    private const val BASE_URL = "https://api.aikanshe.com/"
+    const val APP_ID = "19801266087"
+    const val PSW = "123456"
 
     private val retrofit = Retrofit.Builder()
             .baseUrl(BASE_URL)
