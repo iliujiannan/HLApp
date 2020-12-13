@@ -1,30 +1,52 @@
 package com.example.hlapp.api
 
 import com.example.hlapp.util.getTimestampString
-import com.example.liveandroidpractice.model.data.BaseResponse
+import com.example.hlapp.model.Response
+import com.example.hlapp.util.getDateTimeString
 import com.example.liveandroidpractice.model.data.ServiceCreator
 import com.google.gson.annotations.SerializedName
 import io.reactivex.Observable
+import okhttp3.MultipartBody
 import retrofit2.http.*
+import java.io.File
+import java.util.*
 
 /**
  * Created by liujiannan on 2020/11/10
  */
 interface HLApi {
     @GET("/account/login")
-    fun getUserKey(@Query("tokenKey") tokenKey: String = "get"): Observable<BaseResponse<UserKey>>
+    fun getUserKey(@Query("tokenKey") tokenKey: String = "get"): Observable<Response<UserKey>>
 
-    @FormUrlEncoded
+    @Headers("Content-Type: application/json")
     @POST("/account/login")
     fun login(
-            @Field("appId") appId: String = ServiceCreator.APP_ID,
-            @Field("methodName") method: String = "login",
-            @Field("password") psw: String = ServiceCreator.PSW,
-            @Field("timestamp") timestamp: String = getTimestampString(),
-            @Field("userKey") userKey: String
-    ): Observable<Any>
+            @Body model: LoginRequestModel
+    ): Observable<Response<LoginResponseModel>>
+
+    @Multipart
+    @POST("/pro/detect/v101?methodName=detect")
+    fun doRecognize(
+            @Part file: MultipartBody.Part,
+            @Query("") methodName: String = "",
+            @Query("") timestamp: Date = getDateTimeString(),
+            @Header("authorization") authorization: String,
+            @Header("appId") appId: String = ServiceCreator.APP_ID
+    ): Observable<Response<Any>>
 }
 
 data class UserKey(
         @SerializedName("userKey") val userKey: String = ""
+)
+
+data class LoginRequestModel(
+        @SerializedName("appId") val appId: String = ServiceCreator.APP_ID,
+        @SerializedName("methodName") val method: String = "login",
+        @SerializedName("password") val psw: String = ServiceCreator.PSW,
+        @SerializedName("timestamp") val timestamp: String = getTimestampString(),
+        @SerializedName("userKey") val userKey: String
+)
+
+data class LoginResponseModel(
+        @SerializedName("jwt") val jwt: String
 )

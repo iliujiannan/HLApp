@@ -29,6 +29,7 @@ class SecondActivity : BaseActivity() {
         intent.getBundleExtra("data")?.apply {
             findViewById<TextView>(R.id.tips).text = resources.getString(R.string.hlapp_rec_result_tips, getString("path", ""))
             ImageUtil.loadLocalImage(findViewById<SimpleDraweeView>(R.id.photo), getString("path", ""))
+            viewModel.doDetect(getString("path", ""))
         }
     }
 
@@ -40,7 +41,7 @@ class SecondActivity : BaseActivity() {
     }
 
     private fun initData() {
-        viewModel.getUserKeyAndLogin()
+
     }
 
 }
