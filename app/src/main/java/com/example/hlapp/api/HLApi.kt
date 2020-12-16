@@ -32,7 +32,11 @@ interface HLApi {
             @Query("") timestamp: Date = getDateTimeString(),
             @Header("authorization") authorization: String,
             @Header("appId") appId: String = ServiceCreator.APP_ID
-    ): Observable<Response<Any>>
+    ): Observable<Response<DetectResponse>>
+
+    @Multipart
+    @POST("/demo/getAIKanSheRes")
+    fun getAiKsRes(@Part file: MultipartBody.Part): Observable<Any>
 }
 
 data class UserKey(
@@ -49,4 +53,13 @@ data class LoginRequestModel(
 
 data class LoginResponseModel(
         @SerializedName("jwt") val jwt: String
+)
+
+data class DetectResponse(
+        @SerializedName("id") val id: Long,
+        @SerializedName("feel") val feel: String = "",
+        @SerializedName("recomand") val recommend: String = "",
+        @SerializedName("typeName") val typeName: String = "",
+        @SerializedName("shemianName") val schemianName: String = "",
+        @SerializedName("shemianConfidence") val shemianConfidence: String = ""
 )

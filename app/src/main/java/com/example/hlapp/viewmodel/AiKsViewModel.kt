@@ -1,6 +1,8 @@
 package com.example.hlapp.viewmodel
 
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.example.hlapp.api.DetectResponse
 import com.example.hlapp.api.HLApi
 import com.example.hlapp.api.LoginRequestModel
 import com.example.hlapp.util.ToastUtil
@@ -20,20 +22,24 @@ import java.io.File
  */
 class AiKsViewModel : ViewModel() {
     private val compositeDisposable by lazy { CompositeDisposable() }
-    private var userKey: String = ""
-    private var jwt: String = ""
+
+    val detectResult = MutableLiveData<DetectResponse>()
 
     fun doDetect(filePath: String) {
-        getUserKeyAndLogin(filePath)
+        if (ServiceCreator.jwt.isEmpty()) {
+            getUserKeyAndLogin(filePath)
+        } else {
+            detect(filePath)
+        }
     }
 
-    fun getUserKeyAndLogin(filePath: String) {
+    private fun getUserKeyAndLogin(filePath: String) {
         ServiceCreator.create(HLApi::class.java).getUserKey()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({
-                    userKey = it.data.userKey
-                    ToastUtil.toast("user key: $userKey")
+                    ServiceCreator.userKey = it.data.userKey
+                    ToastUtil.toast("user key: ${ServiceCreator.userKey}")
                     doLogin(filePath)
                 }, {
                     it.printStackTrace()
@@ -43,16 +49,16 @@ class AiKsViewModel : ViewModel() {
     }
 
     private fun doLogin(filePath: String) {
-        ServiceCreator.create(HLApi::class.java).login(model = LoginRequestModel(userKey = userKey))
+        ServiceCreator.create(HLApi::class.java).login(model = LoginRequestModel(userKey = ServiceCreator.userKey))
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({
                     ToastUtil.toast("login success and jwt = ${it.data.jwt}")
-                    jwt = it.data.jwt
+                    ServiceCreator.jwt = it.data.jwt
                     detect(filePath)
                 }, {
                     it.printStackTrace()
-                    ToastUtil.toast("login error and user key = $userKey")
+                    ToastUtil.toast("login error and user key = ${ServiceCreator.userKey}")
                 })
                 .autoDispose()
     }
@@ -60,12 +66,13 @@ class AiKsViewModel : ViewModel() {
     private fun detect(filePath: String) {
         val file = File(filePath)
         val body = RequestBody.create(MediaType.parse("image/*"), file)
-        val part = MultipartBody.Part.createFormData("picture", file.name, body)
-        ServiceCreator.create(HLApi::class.java).doRecognize(file = part, authorization = jwt)
+        val part = MultipartBody.Part.createFormData("file", file.name, body)
+        ServiceCreator.create(HLApi::class.java).doRecognize(file = part, authorization = ServiceCreator.jwt)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({
-                    ToastUtil.toast("detect success and result: ${it.data}")
+                    ToastUtil.toast("detect success and result: ${it.data.recommend}")
+                    detectResult.value = it.data
                 }, {
                     it.printStackTrace()
                     ToastUtil.toast("detect error")

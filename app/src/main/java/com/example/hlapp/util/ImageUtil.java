@@ -83,6 +83,7 @@ public class ImageUtil {
     }
 
     public static String saveImage(Context context, Bitmap bitmap) {
+        Bitmap newBitmap = zoomImg(bitmap, 0.4f);
         String path = ResUtilKt.getCacheRootPath(context) + "/test.jpg";
         File file = new File(path);
         if (file.exists()) {
@@ -90,13 +91,25 @@ public class ImageUtil {
         }
         try {
             FileOutputStream outputStream = new FileOutputStream(file);
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream);
+            newBitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream);
             outputStream.flush();
             outputStream.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
         return path;
+    }
+
+    // 等比缩放图片
+    public static Bitmap zoomImg(Bitmap bm, float scale) {
+        // 获得图片的宽高
+        int width = bm.getWidth();
+        int height = bm.getHeight();
+        // 取得想要缩放的matrix参数
+        Matrix matrix = new Matrix();
+        matrix.postScale((float) scale, (float) scale);
+        // 得到新的图片
+        return Bitmap.createBitmap(bm, 0, 0, width, height, matrix, true);
     }
 
     public static void loadLocalImage(SimpleDraweeView view, String filePath) {

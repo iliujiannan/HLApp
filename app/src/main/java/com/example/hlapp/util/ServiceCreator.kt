@@ -8,10 +8,11 @@ import retrofit2.converter.scalars.ScalarsConverterFactory
 import java.util.concurrent.TimeUnit
 
 object ServiceCreator {
+    var userKey: String = ""
+    var jwt: String = ""
     private const val BASE_URL = "https://api.aikanshe.com/"
     const val APP_ID = "19801266087"
     const val PSW = "123456"
-    var token: String = ""
 
     private val retrofit = Retrofit.Builder()
             .baseUrl(BASE_URL)
